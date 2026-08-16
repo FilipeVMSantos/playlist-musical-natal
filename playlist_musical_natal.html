@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Musical de Natal — Playlist personalizada</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#111;color:#eee;margin:0}
+.wrap{max-width:900px;margin:auto;padding:18px}
+h1{font-size:1.35rem;margin:0 0 4px}
+.sub{color:#aaa;margin-bottom:16px}
+#player{width:100%;aspect-ratio:16/9;background:#000}
+button{padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
+.controls{display:flex;gap:8px;margin:12px 0}
+#list{display:grid;gap:7px}
+.item{background:#222;padding:12px;border-radius:9px;cursor:pointer}
+.item.active{outline:2px solid #fff}
+.small{color:#aaa;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Musical de Natal — AD Belém Sede 2026</h1>
+<div class="sub">Playlist personalizada — 11 vídeos do YouTube</div>
+<div id="player"></div>
+<div class="controls">
+<button onclick="prev()">⏮ Anterior</button>
+<button onclick="toggle()">▶/⏸ Play / Pausa</button>
+<button onclick="next()">Próxima ⏭</button>
+</div>
+<div id="now" class="sub"></div>
+<div id="list"></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const tracks = [
+ {title:"1 — PRELÚDIO — Christmas Festival of Carols", id:null, url:""},
+ {title:"2 — O Holy Night", id:"UcE9FgVvPok", start:1870},
+ {title:"3 — Sinfonia de Natal — Baby", id:"_i_fZjQhOpM", start:630},
+ {title:"4 — Unto Us a Child Is Born", id:"_mCOtLGgkPo", start:0},
+ {title:"5 — Maria Tu Sabias", id:null, url:"https://drive.google.com/drive/folders/19Z3F9z8yIIPCB_qrsTE6v1bGL6CbB4Lk?usp=drive_link"},
+ {title:"6 — Canto de Maria Doxologia", id:null, url:"https://drive.google.com/drive/folders/19Z3F9z8yIIPCB_qrsTE6v1bGL6CbB4Lk?usp=drive_link"},
+ {title:"7 — Santo Pra Sempre — Gabriel Guedes", id:"ijNCc7ICCck", start:0},
+ {title:"8 — A Boa Parte — Nívea Soares", id:"dlGOiuxSzVw", start:0},
+ {title:"9 — O Amor do Nosso Deus — Diante do Trono", id:"tizLdaiwFTA", start:0},
+ {title:"10 — Joy to the World — Cantata Verbo se fez Carne", id:"6B12rXNys0w", start:0},
+ {title:"11 — The Word Became Flash", id:"W5P57O_hhrk", start:0},
+ {title:"12 — We Have Seen His Glory", id:"Pkh2tlFE5-U", start:0},
+ {title:"13 — Posludio — Vem Me Buscar", id:"t6Pd8gXIASU", start:0}
+];
+
+let player, current=0;
+function onYouTubeIframeAPIReady(){
+ player=new YT.Player('player',{
+  width:'100%',height:'100%',videoId:tracks[1].id,
+  playerVars:{playsinline:1,rel:0},
+  events:{onReady:()=>load(1),onStateChange:onState}
+ });
+}
+function load(i){
+ current=i; const t=tracks[i];
+ document.querySelectorAll('.item').forEach((e,n)=>e.classList.toggle('active',n===i));
+ document.getElementById('now').textContent=t.title + (t.start ? ` — início ${fmt(t.start)}` : '');
+ if(t.id) player.loadVideoById({videoId:t.id,startSeconds:t.start||0});
+ else {
+   document.getElementById('now').textContent += " — arquivo/link ainda não configurado";
+   if(t.url) window.open(t.url,'_blank');
+ }
+}
+function onState(e){ if(e.data===YT.PlayerState.ENDED) nextPlayable(); }
+function nextPlayable(){
+ for(let i=current+1;i<tracks.length;i++) if(tracks[i].id){load(i);return;}
+}
+function next(){nextPlayable()}
+function prev(){
+ for(let i=current-1;i>=0;i--) if(tracks[i].id){load(i);return;}
+}
+function toggle(){ if(!player)return; const s=player.getPlayerState(); s===1?player.pauseVideo():player.playVideo(); }
+function fmt(s){let m=Math.floor(s/60),x=s%60;return `${m}:${String(x).padStart(2,'0')}`;}
+const list=document.getElementById('list');
+tracks.forEach((t,i)=>{
+ const d=document.createElement('div'); d.className='item';
+ d.innerHTML=`<b>${t.title}</b><div class="small">${t.id?(t.start?`Começa em ${fmt(t.start)}`:'Começa no início'):'Link pendente / Google Drive'}</div>`;
+ d.onclick=()=>t.id&&load(i); list.appendChild(d);
+});
+</script>
+</body>
+</html>
