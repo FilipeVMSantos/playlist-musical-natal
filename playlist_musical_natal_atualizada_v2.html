@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Musical de Natal — Playlist personalizada</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#111;color:#eee;margin:0}
+.wrap{max-width:900px;margin:auto;padding:18px}
+h1{font-size:1.35rem;margin:0 0 4px}
+.sub{color:#aaa;margin-bottom:16px}
+#player{width:100%;aspect-ratio:16/9;background:#000}
+button{padding:10px 14px;border:0;border-radius:8px;cursor:pointer}
+.controls{display:flex;gap:8px;margin:12px 0}
+#list{display:grid;gap:7px}
+.item{background:#222;padding:12px;border-radius:9px;cursor:pointer}
+.item.active{outline:2px solid #fff}
+.small{color:#aaa;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Musical de Natal — AD Belém Sede 2026</h1>
+<div class="sub">Playlist personalizada — 11 vídeos do YouTube</div>
+<div id="player"></div>
+<div class="controls">
+<button onclick="prev()">⏮ Anterior</button>
+<button onclick="toggle()">▶/⏸ Play / Pausa</button>
+<button onclick="next()">Próxima ⏭</button>
+</div>
+<div id="now" class="sub"></div>
+<div id="list"></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const tracks = [
+  {title:"1 — PRELÚDIO — Christmas Festival of Carols", id:null, url:"", note:"Apenas a orquestra"},
+  {title:"2 — Santa Noite", id:"F48Tj55rBJM", start:1520},
+  {title:"3 — Sinfonia de Natal - Quem é o menino?", id:"FxIsJsvi-AQ", start:3981},
+  {title:"4 — O Verbo se fez carne – Um menino nos nascerá", id:"9WC_DH9t6jw", start:5908},
+  {title:"5 — Maria, Tu Sabias?", id:"1t_EuoMpUcQ", start:0},
+  {title:"6 — Canto de Maria", id:"aomx8I3DsRY", start:0},
+  {title:"7 — Santo Pra Sempre — Gabriel Guedes", id:"ijNCc7ICCck", start:0},
+  {title:"8 — A Boa Parte — Nívea Soares", id:"dlGOiuxSzVw", start:0},
+  {title:"9 — O Amor do Nosso Deus — Diante do Trono", id:"tizLdaiwFTA", start:0},
+  {title:"10 — Cantata o Verbo se fez Carne - Glória in Excelsis Deo", id:"9WC_DH9t6jw", start:6893},
+  {title:"11 — Cantata O Verbo se fez carne – O Verbo se fez Carne", id:"9WC_DH9t6jw", start:7683},
+  {title:"12 — Cantata O Verbo se fez carne – Vimos Sua Glória", id:"9WC_DH9t6jw", start:7762}
+];
+
+let player, current=0;
+
+function onYouTubeIframeAPIReady(){
+  player=new YT.Player('player',{
+    width:'100%',height:'100%',videoId:tracks[1].id,
+    playerVars:{playsinline:1,rel:0},
+    events:{onReady:()=>load(1),onStateChange:onState}
+  });
+}
+
+function load(i){
+  current=i;
+  const t=tracks[i];
+  document.querySelectorAll('.item').forEach((e,n)=>e.classList.toggle('active',n===i));
+
+  const now=document.getElementById('now');
+
+  if(t.id){
+    now.textContent=t.title + (t.start ? ` — início ${fmt(t.start)}` : ' — início');
+    player.loadVideoById({videoId:t.id,startSeconds:t.start||0});
+  } else {
+    now.textContent=t.title + " — " + (t.note || "sem vídeo");
+  }
+}
+
+function onState(e){
+  if(e.data===YT.PlayerState.ENDED) nextPlayable();
+}
+
+function nextPlayable(){
+  for(let i=current+1;i<tracks.length;i++){
+    if(tracks[i].id){load(i);return;}
+  }
+}
+
+function next(){nextPlayable()}
+
+function prev(){
+  for(let i=current-1;i>=0;i--){
+    if(tracks[i].id){load(i);return;}
+  }
+}
+
+function toggle(){
+  if(!player)return;
+  const s=player.getPlayerState();
+  s===1?player.pauseVideo():player.playVideo();
+}
+
+function fmt(s){
+  let h=Math.floor(s/3600);
+  let m=Math.floor((s%3600)/60);
+  let x=s%60;
+  if(h>0) return `${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
+  return `${m}:${String(x).padStart(2,'0')}`;
+}
+
+const list=document.getElementById('list');
+
+tracks.forEach((t,i)=>{
+  const d=document.createElement('div');
+  d.className='item';
+
+  let indication;
+  if(!t.id){
+    indication=t.note || 'Sem vídeo';
+  }else if(t.start){
+    indication=`Começa em ${fmt(t.start)}`;
+  }else{
+    indication='Começa no início';
+  }
+
+  d.innerHTML=`<b>${t.title}</b><div class="small">${indication}</div>`;
+  d.onclick=()=>t.id&&load(i);
+  list.appendChild(d);
+});
+</script>
+</body>
+</html>
